@@ -1,0 +1,54 @@
+{
+    "name": "suifengpiao/laravel-admin-api",
+    "description": "laravel admin api",
+    "type": "library",
+    "keywords": ["laravel", "admin", "grid", "form","api"],
+    "homepage": "https://github.com/suifengpiao14/laravel-admin-api",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "suifengpiao14",
+            "email": "1019439917@qq.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.0.0",
+        "symfony/dom-crawler": "~3.1",
+        "laravel/framework": "~5.5"
+    },
+    "require-dev": {
+        "laravel/laravel": "~5.5",
+    },
+    "autoload": {
+        "psr-4": {
+            "Suifengpiao\\Admin\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\Models\\": "tests/models",
+            "Tests\\Controllers\\": "tests/controllers"
+        },
+        "classmap": [
+            "tests/TestCase.php"
+        ]
+    },
+    "suggest": {
+        "intervention/image": "Required to handling and manipulation upload images (~2.3).",
+        "spatie/eloquent-sortable": "Required to built orderable gird."
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Suifengpiao\\Admin\\AdminServiceProvider"
+            ],
+            "aliases": {
+                "Admin": "Suifengpiao\\Admin\\Facades\\Admin"
+            }
+
+        }
+    }
+}
