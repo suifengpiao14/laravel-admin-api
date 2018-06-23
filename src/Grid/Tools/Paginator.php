@@ -46,7 +46,9 @@ class Paginator extends AbstractTool
      */
     protected function paginationLinks()
     {
-        return $this->paginator->render();
+        $data=$this->paginator->toArray();
+        unset($data['data']);
+        return $data;
     }
 
     /**

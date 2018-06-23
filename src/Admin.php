@@ -64,6 +64,14 @@ class Admin
         return new Form($this->getModel($model), $callable);
     }
 
+    public function content($content){
+        if(is_string($content)){
+            response($content)->header('Content-Type','application/json');
+        }elseif(is_array($content)){
+            response()->json($content);
+        }
+    }
+
     /**
      * Build a tree.
      *
@@ -76,15 +84,7 @@ class Admin
         return new Tree($this->getModel($model), $callable);
     }
 
-    /**
-     * @param Closure $callable
-     *
-     * @return \Suifengpiao\Admin\Layout\Content
-     */
-    public function content(Closure $callable = null)
-    {
-        return new Content($callable);
-    }
+
 
     /**
      * @param $model

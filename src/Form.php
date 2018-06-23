@@ -1397,7 +1397,6 @@ class Form
     public function __toString()
     {
         $data = $this->render();
-        header('Content-Type:application/json');
         return is_string($data)?$data:json_encode($data);
     }
 }

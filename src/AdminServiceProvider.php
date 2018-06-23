@@ -6,6 +6,9 @@ use Illuminate\Support\ServiceProvider;
 
 class AdminServiceProvider extends ServiceProvider
 {
+
+
+
     /**
      * @var array
      */
@@ -23,11 +26,7 @@ class AdminServiceProvider extends ServiceProvider
      * @var array
      */
     protected $routeMiddleware = [
-        'admin.auth'       => \Suifengpiao\Admin\Middleware\Authenticate::class,
-        'admin.pjax'       => \Suifengpiao\Admin\Middleware\Pjax::class,
-        'admin.log'        => \Suifengpiao\Admin\Middleware\LogOperation::class,
-        'admin.permission' => \Suifengpiao\Admin\Middleware\Permission::class,
-        'admin.bootstrap'  => \Suifengpiao\Admin\Middleware\Bootstrap::class,
+       'admin2.bootstrap'  => \Suifengpiao\Admin\Middleware\Bootstrap::class,
     ];
 
     /**
@@ -36,12 +35,8 @@ class AdminServiceProvider extends ServiceProvider
      * @var array
      */
     protected $middlewareGroups = [
-        'admin' => [
-            'admin.auth',
-            'admin.pjax',
-            'admin.log',
-            'admin.bootstrap',
-            'admin.permission',
+        'admin2' => [
+            'admin2.bootstrap',
         ],
     ];
 
@@ -52,11 +47,6 @@ class AdminServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->loadViewsFrom(__DIR__.'/../resources/views', 'admin');
-
-        if (file_exists($routes = admin_path('routes.php'))) {
-            $this->loadRoutesFrom($routes);
-        }
 
         if ($this->app->runningInConsole()) {
             $this->publishes([__DIR__.'/../config' => config_path()], 'laravel-admin-config');
@@ -74,7 +64,6 @@ class AdminServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->loadAdminAuthConfig();
 
         $this->registerRouteMiddleware();
 
