@@ -239,25 +239,23 @@ class Filter
         $this->removeIDFilterIfNeeded();
 
         if (empty($this->filters)) {
-            return '';
+            return [];
+        }
+        $filters=[];
+        /** @var AbstractFilter $filter */
+        foreach($this->filters as $filter){
+            $filters[] = $filter->render();
         }
 
-        $script = <<<'EOT'
+        $action=$this->action ?: $this->urlWithoutFilters();
+        $arr=parse_url($action);
+        $action=sprintf('%s%s',$arr['path']??'',isset($arr['query'])?'?'.$arr['query']:'');
 
-$("#filter-modal .submit").click(function () {
-    $("#filter-modal").modal('toggle');
-    $('body').removeClass('modal-open');
-    $('.modal-backdrop').remove();
-});
-
-EOT;
-        Admin::script($script);
-
-        return view($this->view)->with([
-            'action'  => $this->action ?: $this->urlWithoutFilters(),
-            'filters' => $this->filters,
-            'modalId' => $this->filterModalId,
-        ]);
+        return [
+            'action'  => $action,
+            'filters' => $filters,
+            //'modalId' => $this->filterModalId,
+        ];
     }
 
     /**

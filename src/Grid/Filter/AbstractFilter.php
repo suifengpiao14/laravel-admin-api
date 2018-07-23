@@ -445,8 +445,14 @@ abstract class AbstractFilter
             'name'      => $this->formatName($this->column),
             'label'     => $this->label,
             'value'     => $this->value ?: $this->defaultValue,
-            'presenter' => $this->presenter(),
+            'type'=> $this->type(),
         ], $this->presenter()->variables());
+    }
+
+    protected function type(){
+        $arr =explode('\\',get_class($this->presenter));
+        $type = strtolower(end($arr));
+        return $type;
     }
 
     /**
@@ -456,7 +462,7 @@ abstract class AbstractFilter
      */
     public function render()
     {
-        return view($this->view, $this->variables());
+        return $this->variables();
     }
 
     /**
@@ -466,7 +472,8 @@ abstract class AbstractFilter
      */
     public function __toString()
     {
-        return $this->render();
+        $data = $this->render();
+        return is_string($data)?$data:json_encode($data);
     }
 
     /**

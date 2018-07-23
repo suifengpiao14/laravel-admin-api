@@ -77,7 +77,7 @@ trait ImageField
      */
     public function render()
     {
-        $this->options(['allowedFileTypes' => ['image']]);
+        $this->options(['allowed_file_types' => ['image']]);
 
         return parent::render();
     }

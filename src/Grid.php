@@ -616,7 +616,7 @@ class Grid
     public function renderFilter()
     {
         if (!$this->option('useFilter')) {
-            return '';
+            return [];
         }
 
         return $this->filter->render();
@@ -1051,11 +1051,13 @@ class Grid
             $rows[]=$row->model();
         }
 
-        $data['rows']=$rows;
+        $data['data']=$rows;
         $data['paginator']=$this->paginator()->render();
         $data['header']=$this->header;
         $data['description']=$this->description;
         $data['breadcrumb']=$this->breadcrumb;
+        $data['filters']=$this->renderFilter();
+        $data['create_action']=$this->renderCreateButton()->render();
         return $data;
     }
 

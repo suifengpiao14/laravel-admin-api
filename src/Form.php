@@ -168,6 +168,30 @@ class Form
     public $rows = [];
 
     /**
+     * Content header.
+     *
+     * @var string
+     */
+    protected $header = '';
+
+    /**
+     * Content description.
+     *
+     * @var string
+     */
+    protected $description = '';
+
+    /**
+     * Page breadcrumb.
+     *
+     * @var array
+     */
+    protected $breadcrumb = [];
+
+
+
+
+    /**
      * Create a new form instance.
      *
      * @param $model
@@ -178,9 +202,39 @@ class Form
         $this->model = $model;
 
         $this->builder = new Builder($this);
+        $this->registerBuiltinFields();//创建时注册
 
         $callback($this);
     }
+
+    /**
+     * Set header of content.
+     *
+     * @param string $header
+     *
+     * @return $this
+     */
+    public function header($header = '')
+    {
+        $this->header = $header;
+
+        return $this;
+    }
+
+    /**
+     * Set description of content.
+     *
+     * @param string $description
+     *
+     * @return $this
+     */
+    public function description($description = '')
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
 
     /**
      * @param Field $field
@@ -283,16 +337,27 @@ class Form
     public function destroy($id)
     {
         $ids = explode(',', $id);
-
+        $errorIds=[];
         foreach ($ids as $id) {
             if (empty($id)) {
                 continue;
             }
-            $this->deleteFilesAndImages($id);
-            $this->model->find($id)->delete();
+            $model=$this->model->find($id);
+            $this->deleteFilesAndImages($id,$model);
+            if(!$model || !$model->delete()){
+                $errorIds[]=$id;
+            }
+
         }
 
-        return true;
+        if(!$errorIds){
+            return true;
+        }
+        return [
+            'code'=>400,
+            'error_ids'=>implode(',',$errorIds),
+        ];
+
     }
 
     /**
@@ -300,8 +365,12 @@ class Form
      *
      * @param $id
      */
-    protected function deleteFilesAndImages($id)
+    protected function deleteFilesAndImages($id,&$model=null)
     {
+        $model or $model=$this->model->find($id);
+        if(!$model){
+            return false;
+        }
         $data = $this->model->with($this->getRelations())
             ->findOrFail($id)->toArray();
 
@@ -309,9 +378,9 @@ class Form
             return $field instanceof Field\File;
         })->each(function (File $file) use ($data) {
             $file->setOriginal($data);
-
             $file->destroy();
         });
+        return true;
     }
 
     /**
@@ -325,7 +394,8 @@ class Form
 
         // Handle validation errors.
         if ($validationMessages = $this->validationMessages($data)) {
-            return back()->withInput()->withErrors($validationMessages);
+            $messages=$validationMessages->getMessages();
+            return response()->json($messages,422);
         }
 
         if (($response = $this->prepare($data)) instanceof Response) {
@@ -348,7 +418,7 @@ class Form
             return $response;
         }
 
-        if ($response = $this->ajaxResponse(trans('admin.save_succeeded'))) {
+        if ($response = $this->ajaxResponse(trans('backend.save_succeeded'))) {
             return $response;
         }
 
@@ -362,11 +432,13 @@ class Form
      */
     protected function redirectAfterStore()
     {
-        admin_toastr(trans('admin.save_succeeded'));
-
+        $message=trans('backend.save_succeeded');
         $url = Input::get(Builder::PREVIOUS_URL_KEY) ?: $this->resource(0);
-
-        return redirect($url);
+        return response()->json([
+            'code'=>200,
+            'message'=>$message,
+            'url'=>$url
+        ]);
     }
 
     /**
@@ -511,7 +583,7 @@ class Form
         if ($this->handleOrderable($id, $data)) {
             return response([
                 'status'  => true,
-                'message' => trans('admin.update_succeeded'),
+                'message' => trans('backend.update_succeeded'),
             ]);
         }
 
@@ -522,11 +594,7 @@ class Form
 
         // Handle validation errors.
         if ($validationMessages = $this->validationMessages($data)) {
-            if (!$isEditable) {
-                return back()->withInput()->withErrors($validationMessages);
-            } else {
-                return response()->json(['errors' => array_dot($validationMessages->getMessages())], 422);
-            }
+            return response()->json(['errors' => array_dot($validationMessages->getMessages())], 422);
         }
 
         if (($response = $this->prepare($data)) instanceof Response) {
@@ -550,7 +618,7 @@ class Form
             return $result;
         }
 
-        if ($response = $this->ajaxResponse(trans('admin.update_succeeded'))) {
+        if ($response = $this->ajaxResponse(trans('backend.update_succeeded'))) {
             return $response;
         }
 
@@ -564,11 +632,15 @@ class Form
      */
     protected function redirectAfterUpdate()
     {
-        admin_toastr(trans('admin.update_succeeded'));
+        $message=trans('backend.update_succeeded');
 
         $url = Input::get(Builder::PREVIOUS_URL_KEY) ?: $this->resource(-1);
 
-        return redirect($url);
+        return [
+            'code'=>200,
+            'message'=>$message,
+            'url'=>$url,
+        ];
     }
 
     /**
@@ -1169,12 +1241,12 @@ class Form
     public function resource($slice = -2)
     {
         $segments = explode('/', trim(app('request')->getUri(), '/'));
-
+        $segments = array_slice($segments, 3);//改成相对地址
         if ($slice != 0) {
             $segments = array_slice($segments, 0, $slice);
         }
         // # fix #1768
-        if ($segments[0] == 'http:' && config('admin.secure') == true) {
+        if (isset($segments[0])&&$segments[0] == 'http:' && config('admin.secure') == true) {
             $segments[0] = 'https:';
         }
 
@@ -1189,7 +1261,14 @@ class Form
     public function render()
     {
         try {
-            return $this->builder->render();
+            $rows=$this->builder->render();
+            $data=[
+                'action'=>$this->builder->getAction(),
+                'header'=>$this->builder->title(),
+                'description'=>$this->description,
+                'rows'=>$rows,
+            ];
+            return $data;
         } catch (\Exception $e) {
             return Handler::renderException($e);
         }

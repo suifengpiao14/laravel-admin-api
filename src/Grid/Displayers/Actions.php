@@ -126,7 +126,7 @@ class Actions extends AbstractDisplayer
 
         $actions = array_merge($actions, $this->appends);
 
-        return implode('', $actions);
+        return $actions;
     }
 
     public function setKey($key)
@@ -152,11 +152,11 @@ class Actions extends AbstractDisplayer
      */
     protected function editAction()
     {
-        return <<<EOT
-<a href="{$this->getResource()}/{$this->getKey()}/edit">
-    <i class="fa fa-edit"></i>
-</a>
-EOT;
+        return [
+            'key'=>'EditRow',
+            'method'=>'get',
+            'url'=>sprintf("%s/%s/edit",$this->getResource(),$this->getKey()),
+        ];
     }
 
     /**
@@ -166,56 +166,11 @@ EOT;
      */
     protected function deleteAction()
     {
-        $deleteConfirm = trans('admin.delete_confirm');
-        $confirm = trans('admin.confirm');
-        $cancel = trans('admin.cancel');
-
-        $script = <<<SCRIPT
-
-$('.grid-row-delete').unbind('click').click(function() {
-
-    var id = $(this).data('id');
-
-    swal({
-      title: "$deleteConfirm",
-      type: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#DD6B55",
-      confirmButtonText: "$confirm",
-      closeOnConfirm: false,
-      cancelButtonText: "$cancel"
-    },
-    function(){
-        $.ajax({
-            method: 'post',
-            url: '{$this->getResource()}/' + id,
-            data: {
-                _method:'delete',
-                _token:LA.token,
-            },
-            success: function (data) {
-                $.pjax.reload('#pjax-container');
-
-                if (typeof data === 'object') {
-                    if (data.status) {
-                        swal(data.message, '', 'success');
-                    } else {
-                        swal(data.message, '', 'error');
-                    }
-                }
-            }
-        });
-    });
-});
-
-SCRIPT;
-
-        Admin::script($script);
-
-        return <<<EOT
-<a href="javascript:void(0);" data-id="{$this->getKey()}" class="grid-row-delete">
-    <i class="fa fa-trash"></i>
-</a>
-EOT;
+        return [
+            'key'=>'DeleteRow',
+            'method'=>'delete',
+            'url'=>sprintf("%s/%s",$this->getResource(),$this->getKey()),
+            'payload'=>['status'=>0]
+        ];
     }
 }

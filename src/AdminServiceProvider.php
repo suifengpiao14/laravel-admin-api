@@ -26,7 +26,7 @@ class AdminServiceProvider extends ServiceProvider
      * @var array
      */
     protected $routeMiddleware = [
-       'admin2.bootstrap'  => \Suifengpiao\Admin\Middleware\Bootstrap::class,
+       'backend.bootstrap'  => \Suifengpiao\Admin\Middleware\Bootstrap::class,
     ];
 
     /**
@@ -35,8 +35,8 @@ class AdminServiceProvider extends ServiceProvider
      * @var array
      */
     protected $middlewareGroups = [
-        'admin2' => [
-            'admin2.bootstrap',
+        'backend' => [
+            'backend.bootstrap',
         ],
     ];
 

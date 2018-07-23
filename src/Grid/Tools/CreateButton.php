@@ -27,16 +27,10 @@ class CreateButton extends AbstractTool
             return '';
         }
 
-        $new = trans('admin.new');
-
-        return <<<EOT
-
-<div class="btn-group pull-right" style="margin-right: 10px">
-    <a href="{$this->grid->resource()}/create" class="btn btn-sm btn-success">
-        <i class="fa fa-save"></i>&nbsp;&nbsp;{$new}
-    </a>
-</div>
-
-EOT;
+        $data=[
+            'url'=>$this->grid->resource(),
+            'label'=>trans('backend.create'),
+        ];
+        return $data;
     }
 }

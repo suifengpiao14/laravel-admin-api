@@ -333,15 +333,15 @@ class Builder
     public function title()
     {
         if ($this->mode == static::MODE_CREATE) {
-            return trans('admin.create');
+            return trans('backend.create');
         }
 
         if ($this->mode == static::MODE_EDIT) {
-            return trans('admin.edit');
+            return trans('backend.edit');
         }
 
         if ($this->mode == static::MODE_VIEW) {
-            return trans('admin.view');
+            return trans('backend.view');
         }
 
         return '';

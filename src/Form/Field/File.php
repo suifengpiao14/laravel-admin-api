@@ -176,15 +176,7 @@ class File extends Field
             $this->setupPreviewOptions();
         }
 
-        $this->options(['overwriteInitial' => true]);
-
-        $options = json_encode($this->options);
-
-        $this->script = <<<EOT
-
-$("input{$this->getElementClassSelector()}").fileinput({$options});
-
-EOT;
+        //$this->options(['overwriteInitial' => true]);
 
         return parent::render();
     }

@@ -2,8 +2,34 @@
 
 namespace Suifengpiao\Admin\Controllers;
 
+use Suifengpiao\Admin\Facades\Admin;
+use Suifengpiao\Admin\Form;
+use Suifengpiao\Admin\Grid;
+
 trait ModelForm
 {
+
+    public function index(){
+        return $this->grid()->render();
+    }
+
+    public function create(){
+        return $this->form()->render();
+    }
+
+
+    public function edit($id){
+        return $this->form()->edit($id)->render();
+    }
+
+    protected function grid(){
+        return Admin::grid(\Illuminate\Database\Eloquent\Model::class,function(Grid $grid){});
+    }
+
+    protected function form(){
+        return Admin::form(\Illuminate\Database\Eloquent\Model::class,function(Form $form){});
+    }
+
     /**
      * Display the specified resource.
      *
@@ -37,15 +63,17 @@ trait ModelForm
      */
     public function destroy($id)
     {
-        if ($this->form()->destroy($id)) {
+        $result=$this->form()->destroy($id);
+        if (true===$result) {
             return response()->json([
-                'status'  => true,
-                'message' => trans('admin.delete_succeeded'),
+                'code'  => 200,
+                'message' => trans('backend.delete_succeeded'),
             ]);
         } else {
             return response()->json([
-                'status'  => false,
-                'message' => trans('admin.delete_failed'),
+                'code'  => 400,
+                'message' => trans('backend.delete_failed'),
+                'error_ids'=>$result['error_ids']??'',
             ]);
         }
     }

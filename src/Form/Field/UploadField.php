@@ -61,22 +61,18 @@ trait UploadField
     protected function setupDefaultOptions()
     {
         $defaultOptions = [
-            'overwriteInitial'     => false,
-            'initialPreviewAsData' => true,
-            'browseLabel'          => trans('admin.browse'),
-            'showRemove'           => false,
-            'showUpload'           => false,
-//            'initialCaption'       => $this->initialCaption($this->value),
-            'deleteExtraData' => [
-                $this->formatName($this->column) => static::FILE_DELETE_FLAG,
-                static::FILE_DELETE_FLAG         => '',
-                '_token'                         => csrf_token(),
-                '_method'                        => 'PUT',
+            'post_data'=>[
+                'project'     => 'backend',
+                'endpoint' => 'backend',
+                'type'          => 'image',
             ],
+            'input_name'           => 'file',
+            'url'           =>'/v1/oss/singleFile?host=fileupload.szprize.cn',
+            'method'    =>'post',
         ];
 
         if ($this->form instanceof Form) {
-            $defaultOptions['deleteUrl'] = $this->form->resource().'/'.$this->form->model()->getKey();
+            $defaultOptions['delete_url'] = $this->form->resource().'/'.$this->form->model()->getKey();
         }
 
         $this->options($defaultOptions);

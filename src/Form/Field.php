@@ -8,6 +8,8 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\MessageBag;
+use Illuminate\Validation\ValidationRuleParser;
 
 /**
  * Class Field.
@@ -590,9 +592,9 @@ class Field implements Renderable
         }
 
         if (is_string($this->column)) {
-            if (!array_has($input, $this->column)) {
+            /*if (!array_has($input, $this->column)) {
                 return false;
-            }
+            }*/
 
             $input = $this->sanitizeInput($input, $this->column);
 
@@ -869,39 +871,93 @@ class Field implements Renderable
             'value'       => $this->value(),
             'label'       => $this->label,
             'column'      => $this->column,
-            'errorKey'    => $this->getErrorKey(),
-            'attributes'  => $this->formatAttributes(),
+            'rules'       => $this->getMessage(),
+            //'attributes'  => $this->formatAttributes(),
             'placeholder' => $this->getPlaceholder(),
             'type'        => $this->type(),
         ]);
         return $data;
     }
 
-    /**
-     * Get view of this field.
-     *
-     * @return string
-     */
-    public function getView()
-    {
-        if (!empty($this->view)) {
-            return $this->view;
+    protected function getMessage(){
+        if($this->validationMessages){
+            return $this->validationMessages;
+        }
+        /** @var bool|Validator $validator */
+        $validator = $this->getValidator([$this->id=>null]);
+        if(!$validator){
+            return [];
+        }
+        $reflectionClass = new \ReflectionClass($validator);
+        $attributeRules=$reflectionClass->getProperty('rules');
+        $methodGetMessage=$reflectionClass->getMethod('getMessage');
+        $methodGetMessage->setAccessible(true);
+        $attributeRules->setAccessible(true);
+        $attributeRules->getValue($validator);
+        $data=[];
+        foreach ($attributeRules->getValue($validator) as $attribute => $rules) {
+            $attribute = str_replace('\.', '->', $attribute);
+            foreach ($rules as $rule) {
+                $row=[];
+                list($rule, $parameters) = ValidationRuleParser::parse($rule);
+                $template=$methodGetMessage->invoke($validator,$attribute, $rule);
+                $message=$validator->makeReplacements($template, $attribute, $rule, $parameters);
+                $rule = strtolower($rule);
+                $row['message']=$message;
+                $arr=(array)$this->clientRule($rule,$parameters);
+                $row +=$arr;
+                $data[]=$row;
+            }
+        }
+        return $data;
+    }
+
+    public function clientRule($key,$parameters){
+        $clientRules=[
+            'enum'=>$parameters,
+            'len'=>reset($parameters),
+            'max'=>reset($parameters),
+            'message'=>'',
+            'min'=>reset($parameters),
+            'pattern'=>reset($parameters),
+            'required'=>true,
+            'transform'=>reset($parameters),
+            'type'=>reset($parameters),
+            'validator'=>reset($parameters),
+            'whitespace'=>reset($parameters),
+        ];
+        $rule=[];
+        if(isset($clientRules[$key])){
+            $rule[$key]=$clientRules[$key];
+        }elseif($clientType=$this->clientType($key)){
+            $rule['type']=$clientType;
         }
 
-        $class = explode('\\', get_called_class());
-
-        return 'admin::form.'.strtolower(end($class));
+        return $rule;
     }
 
-    /**
-     * Get script of current field.
-     *
-     * @return string
-     */
-    public function getScript()
-    {
-        return $this->script;
+    public function clientType($serverType){
+        $types=[
+            'string'=>'string',
+            'numeric'=>'number',
+            'number'=>'number',
+            'boolean'=>'boolean',
+            'method'=>'method',
+            'regexp'=>'regexp',
+            'integer'=>'integer',
+            'float'=>'float',
+            'array'=>'array',
+            'object'=>'object',
+            'enum'=>'enum',
+            'date'=>'date',
+            'url'=>'url',
+            'hex'=>'hex',
+            'email'=>'email',
+        ];
+        return $types[$serverType]??'';
     }
+
+
 
     /**
      * Render this filed.
@@ -910,8 +966,9 @@ class Field implements Renderable
      */
     public function render()
     {
-        //Admin::script($this->script);
-        return $this->variables();
+        $data=$this->variables();
+        $data['options']=$this->options;
+        return $data;
         //return view($this->getView(), $this->variables());
     }
 
